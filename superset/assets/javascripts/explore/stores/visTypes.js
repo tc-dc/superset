@@ -133,6 +133,7 @@ const visTypes = {
           ['rich_tooltip', null],
           ['show_markers', 'x_axis_showminmax'],
           ['line_interpolation', 'contribution'],
+          ['overlays', 'offset_overlays'],
         ],
       },
       {

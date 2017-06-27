@@ -854,6 +854,24 @@ export const controls = {
     description: 'Line interpolation as defined by d3.js',
   },
 
+  overlays: {
+    type: 'SelectControl',
+    multi: true,
+    label: 'Overlays',
+    mapStateToProps: state => ({ choices: state.slices || [] }),
+    default: [],
+  },
+
+  offset_overlays: {
+    type: 'CheckboxControl',
+    label: 'Auto Offset Overlays',
+    default: false,
+    description: (
+        'Auto offset overlay to match the time ' +
+        'frame of the current config.'
+    ),
+  },
+
   pie_label_type: {
     type: 'SelectControl',
     label: 'Label Type',

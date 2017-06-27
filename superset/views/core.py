@@ -919,6 +919,34 @@ class Superset(BaseSupersetView):
             endpoint += '&standalone=true'
         return redirect(endpoint)
 
+    def get_overlays(self, overlays, offset_overlays, since, until):
+        overlay_payload = []
+
+        if offset_overlays:
+            since = utils.parse_human_datetime(since)
+            until = utils.parse_human_datetime(until)
+
+        for o in overlays:
+            overlay_viz = self.get_viz(slice_id=o)
+            if offset_overlays:
+                delta = since - utils.parse_human_datetime(
+                    overlay_viz.form_data.get('since'))
+            new_overlays = overlay_viz.get_payload(
+                force=request.args.get('force') == 'true').get('data')
+            for n in new_overlays:
+                n['key'] = '{0} {1}'.format(
+                    overlay_viz.form_data.get('slice_name'),
+                    n.get('key'))
+                if offset_overlays:
+                    n_values = list(n.get('values', []))
+                    n['values'] = []
+                    for v in n_values:
+                        v['x'] += delta
+                        if v['x'] <= until:
+                            n['values'].append(v)
+                overlay_payload.extend(new_overlays)
+        return overlay_payload
+
     @log_this
     @has_access_api
     @expose("/explore_json/<datasource_type>/<datasource_id>/")
@@ -959,9 +987,18 @@ class Superset(BaseSupersetView):
                 mimetype="application/json")
 
         payload = {}
+
+        overlays = viz_obj.form_data.get('overlays', [])
+        overlay_payload = [] if not overlays else self.get_overlays(
+                overlays=overlays,
+                offset_overlays=viz_obj.form_data.get('offset_overlays'),
+                since=viz_obj.form_data.get('since'),
+                until=viz_obj.form_data.get('until'))
         try:
             payload = viz_obj.get_payload(
                 force=request.args.get('force') == 'true')
+            if payload.get('data') and overlay_payload:
+                payload.get('data').extend(overlay_payload)
         except Exception as e:
             logging.exception(e)
             return json_error_response(utils.error_msg_from_exception(e))
@@ -1017,6 +1054,9 @@ class Superset(BaseSupersetView):
         if slice_id:
             slc = db.session.query(models.Slice).filter_by(id=slice_id).first()
 
+        slices = [[s.id, s.slice_name] for s in db.session.query(
+            models.Slice).filter_by(viz_type=slc.viz_type)]
+
         error_redirect = '/slicemodelview/list/'
         datasource = (
             db.session.query(ConnectorRegistry.sources[datasource_type])
@@ -1063,6 +1103,7 @@ class Superset(BaseSupersetView):
             "can_download": slice_download_perm,
             "can_overwrite": slice_overwrite_perm,
             "datasource": datasource.data,
+            "slices": slices,
             "form_data": form_data,
             "datasource_id": datasource_id,
             "datasource_type": datasource_type,
