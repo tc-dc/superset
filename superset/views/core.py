@@ -91,8 +91,20 @@ def get_database_access_error_msg(database_name):
 
 
 def get_datasource_access_error_msg(datasource_name):
-    return __('This endpoint requires the datasource %(name)s, database or '
-              '`all_datasource_access` permission', name=datasource_name)
+    return __('This endpoint requires the datasource %(name)s, database, or '
+              '`all_datasource_access` permission.', name=datasource_name)
+
+
+def get_roles_access_error_msg(datasource_name, role_names):
+    error_msg = __('This endpoint requires access to datasource(s) %(name)s',
+                   name=datasource_name)
+    if len(role_names) > 0:
+        role_names_str = ', '.join(role_names)
+        error_msg += __(
+            ', which can be granted via role(s) %(role)s', role=role_names_str)
+    if perms_instruction_link:
+        error_msg += __(' <a href=%(link)>(Gain access)</a>', link=perms_instruction_link)
+    return error_msg
 
 
 def json_success(json_msg, status=200):
@@ -1086,7 +1098,11 @@ class Superset(BaseSupersetView):
                 stacktrace=traceback.format_exc())
 
         if not security_manager.datasource_access(viz_obj.datasource, g.user):
-            return json_error_response(DATASOURCE_ACCESS_ERR, status=404)
+            roles_with_access = security_manager.roles_with_access_by_datasource(
+                viz_obj.datasource)
+            return json_error_response(
+                msg=get_roles_access_error_msg(viz_obj.datasource, roles_with_access),
+                status=404)
 
         if csv:
             return CsvResponse(
@@ -1246,8 +1262,10 @@ class Superset(BaseSupersetView):
             return redirect(error_redirect)
 
         if not security_manager.datasource_access(datasource):
+            roles_with_access = security_manager.roles_with_access_by_datasource(
+                datasource)
             flash(
-                __(get_datasource_access_error_msg(datasource.name)),
+                __(get_roles_access_error_msg(datasource.name, roles_with_access)),
                 'danger')
             return redirect(
                 'superset/request_access/?'
@@ -1344,7 +1362,7 @@ class Superset(BaseSupersetView):
         if not datasource:
             return json_error_response(DATASOURCE_MISSING_ERR)
         if not security_manager.datasource_access(datasource):
-            return json_error_response(DATASOURCE_ACCESS_ERR)
+            return json_error_response(get_datasource_access_error_msg(datasource))
 
         payload = json.dumps(
             datasource.values_for_column(
@@ -2512,7 +2530,7 @@ class Superset(BaseSupersetView):
 
         # Check permission for datasource
         if not security_manager.datasource_access(datasource):
-            return json_error_response(DATASOURCE_ACCESS_ERR)
+            return json_error_response(get_datasource_access_error_msg(datasource))
         return json_success(json.dumps(datasource.data))
 
     @expose('/queries/<last_updated_ms>')
@@ -2660,7 +2678,9 @@ class Superset(BaseSupersetView):
         """
         viz_obj = self.get_viz(slice_id)
         if not security_manager.datasource_access(viz_obj.datasource):
-            return json_error_response(DATASOURCE_ACCESS_ERR, status=401)
+            return json_error_response(
+                msg=get_datasource_access_error_msg(viz_obj.datasource),
+                status=401)
         return self.get_query_string_response(viz_obj)
 
 

@@ -211,6 +211,30 @@ class SupersetSecurityManager(SecurityManager):
             full_names = {d.full_name for d in user_datasources}
             return [d for d in datasource_names if d in full_names]
 
+    def roles_with_access(self, permission_name, view_name):
+        roles_with_access = []
+        roles = self.get_all_roles()
+        for role in roles:
+            permissions = role.permissions
+            if permissions:
+                for permission in permissions:
+                    if (
+                        view_name == permission.view_menu.name and
+                        permission_name == permission.permission.name
+                    ):
+                        roles_with_access.append(role.name)
+        return roles_with_access
+
+    def roles_with_access_by_perm(self, database_perm, schema_perm, datasource_perm):
+        db_access_roles = self.roles_with_access('database_access', database_perm)
+        schema_access_roles = self.roles_with_access('schema_access', schema_perm)
+        ds_access_roles = self.roles_with_access('datasource_access', datasource_perm)
+        return list(set(db_access_roles + schema_access_roles + ds_access_roles))
+
+    def roles_with_access_by_datasource(self, datasource):
+        return self.roles_with_access_by_perm(
+            datasource.database.perm, datasource.schema_perm, datasource.perm)
+
     def merge_perm(self, permission_name, view_menu_name):
         # Implementation copied from sm.find_permission_view_menu.
         # TODO: use sm.find_permission_view_menu once issue
