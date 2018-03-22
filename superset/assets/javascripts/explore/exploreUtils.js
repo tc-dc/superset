@@ -5,9 +5,9 @@ export function trimFormData(formData) {
   const cleaned = { ...formData };
   Object.entries(formData).forEach(([k, v]) => {
     if (v === null || v === undefined) {
-    delete cleaned[k];
-  }
-});
+      delete cleaned[k];
+    }
+  });
   return cleaned;
 }
 
