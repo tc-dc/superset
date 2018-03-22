@@ -1,6 +1,16 @@
 /* eslint camelcase: 0 */
 import URI from 'urijs';
 
+export function trimFormData(formData) {
+  const cleaned = { ...formData };
+  Object.entries(formData).forEach(([k, v]) => {
+    if (v === null || v === undefined) {
+    delete cleaned[k];
+  }
+});
+  return cleaned;
+}
+
 export function getChartKey(explore) {
   const slice = explore.slice;
   return slice ? ('slice_' + slice.slice_id) : 'slice';
@@ -14,8 +24,7 @@ export function getAnnotationJsonUrl(slice_id, form_data, isNative) {
   const endpoint = isNative ? 'annotation_json' : 'slice_json';
   return uri.pathname(`/superset/${endpoint}/${slice_id}`)
     .search({
-      form_data: JSON.stringify(form_data,
-        (key, value) => value === null ? undefined : value),
+      form_data: JSON.stringify(trimFormData(form_data)),
     }).toString();
 }
 
