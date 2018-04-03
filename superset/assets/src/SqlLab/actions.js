@@ -21,6 +21,7 @@ export const QUERY_EDITOR_SET_SCHEMA = 'QUERY_EDITOR_SET_SCHEMA';
 export const QUERY_EDITOR_SET_TITLE = 'QUERY_EDITOR_SET_TITLE';
 export const QUERY_EDITOR_SET_AUTORUN = 'QUERY_EDITOR_SET_AUTORUN';
 export const QUERY_EDITOR_SET_SQL = 'QUERY_EDITOR_SET_SQL';
+export const QUERY_EDITOR_SET_QUERY_LIMIT = 'QUERY_EDITOR_SET_QUERY_LIMIT';
 export const QUERY_EDITOR_SET_TEMPLATE_PARAMS = 'QUERY_EDITOR_SET_TEMPLATE_PARAMS';
 export const QUERY_EDITOR_SET_SELECTED_TEXT = 'QUERY_EDITOR_SET_SELECTED_TEXT';
 export const QUERY_EDITOR_PERSIST_HEIGHT = 'QUERY_EDITOR_PERSIST_HEIGHT';
@@ -135,6 +136,7 @@ export function runQuery(query) {
       tmp_table_name: query.tempTableName,
       select_as_cta: query.ctas,
       templateParams: query.templateParams,
+      queryLimit: query.queryLimit,
     };
     const sqlJsonUrl = '/superset/sql_json/' + location.search;
     $.ajax({
@@ -254,6 +256,10 @@ export function queryEditorSetSql(queryEditor, sql) {
   return { type: QUERY_EDITOR_SET_SQL, queryEditor, sql };
 }
 
+export function queryEditorSetQueryLimit(queryEditor, queryLimit) {
+  return { type: QUERY_EDITOR_SET_QUERY_LIMIT, queryEditor, queryLimit };
+}
+
 export function queryEditorSetTemplateParams(queryEditor, templateParams) {
   return { type: QUERY_EDITOR_SET_TEMPLATE_PARAMS, queryEditor, templateParams };
 }
@@ -339,6 +345,7 @@ export function reFetchQueryResults(query) {
       tab: '',
       runAsync: false,
       ctas: false,
+      queryLimit: query.queryLimit,
     };
     dispatch(runQuery(newQuery));
     dispatch(changeDataPreviewId(query.id, newQuery));

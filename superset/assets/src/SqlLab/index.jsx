@@ -19,7 +19,8 @@ initJQueryAjax();
 
 const appContainer = document.getElementById('app');
 const bootstrapData = JSON.parse(appContainer.getAttribute('data-bootstrap'));
-const state = Object.assign({}, getInitialState(bootstrapData.defaultDbId), bootstrapData);
+const state = Object.assign({}, getInitialState(
+  bootstrapData.defaultDbId, bootstrapData.defaultQueryLimit), bootstrapData);
 
 const store = createStore(
   sqlLabReducer, state, compose(applyMiddleware(thunkMiddleware), initEnhancer()));

@@ -2369,6 +2369,12 @@ class Superset(BaseSupersetView):
         schema = request.form.get('schema') or None
         template_params = json.loads(
             request.form.get('templateParams') or '{}')
+        limit = int(request.form.get('queryLimit', 0)) or mydb.db_engine_spec.get_limit_from_sql(sql)
+        if limit < 0:
+            logging.warning(
+                'Invalid limit of {} specified. Defaulting to no limit.'.format(limit))
+            limit = 0
+        wrap_with_limit = bool(limit)
 
         session = db.session()
         mydb = session.query(models.Database).filter_by(id=database_id).first()
@@ -2393,7 +2399,7 @@ class Superset(BaseSupersetView):
 
         query = Query(
             database_id=int(database_id),
-            limit=mydb.db_engine_spec.get_limit_from_sql(sql),
+            limit=limit or app.config.get('SQL_MAX_ROW', 0) or None,
             sql=sql,
             schema=schema,
             select_as_cta=request.form.get('select_as_cta') == 'true',
@@ -2433,7 +2439,8 @@ class Superset(BaseSupersetView):
                     rendered_query,
                     return_results=False,
                     store_results=not query.select_as_cta,
-                    user_name=g.user.username)
+                    user_name=g.user.username,
+                    wrap_with_limit=wrap_with_limit)
             except Exception as e:
                 logging.exception(e)
                 msg = (
@@ -2464,7 +2471,8 @@ class Superset(BaseSupersetView):
                 data = sql_lab.get_sql_results(
                     query_id,
                     rendered_query,
-                    return_results=True)
+                    return_results=True,
+                    wrap_with_limit=wrap_with_limit)
             payload = json.dumps(
                 data, default=utils.pessimistic_json_iso_dttm_ser, ignore_nan=True)
         except Exception as e:
@@ -2690,6 +2698,7 @@ class Superset(BaseSupersetView):
         """SQL Editor"""
         d = {
             'defaultDbId': config.get('SQLLAB_DEFAULT_DBID'),
+            'defaultQueryLimit': config.get('SQL_MAX_ROW'),
             'common': self.common_bootsrap_payload(),
         }
         return self.render_template(

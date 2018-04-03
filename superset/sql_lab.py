@@ -117,14 +117,14 @@ def convert_results_to_df(column_names, data):
 @celery_app.task(bind=True, soft_time_limit=SQLLAB_TIMEOUT)
 def get_sql_results(
     ctask, query_id, rendered_query, return_results=True, store_results=False,
-        user_name=None):
+        user_name=None, wrap_with_limit=False):
     """Executes the sql query returns the results."""
     with session_scope(not ctask.request.called_directly) as session:
 
         try:
             return execute_sql(
                 ctask, query_id, rendered_query, return_results, store_results, user_name,
-                session=session)
+                session=session, wrap_with_limit=wrap_with_limit)
         except Exception as e:
             logging.exception(e)
             stats_logger.incr('error_sqllab_unhandled')
@@ -138,8 +138,7 @@ def get_sql_results(
 
 def execute_sql(
     ctask, query_id, rendered_query, return_results=True, store_results=False,
-    user_name=None, session=None,
-):
+        user_name=None, session=None, wrap_with_limit=False):
     """Executes the sql query returns the results."""
 
     query = get_query(query_id, session)
@@ -187,7 +186,7 @@ def execute_sql(
         executed_sql = superset_query.as_create_table(query.tmp_table_name)
         query.select_as_cta_used = True
     if (superset_query.is_select() and SQL_MAX_ROWS and
-            (not query.limit or query.limit > SQL_MAX_ROWS)):
+            (not query.limit or query.limit > SQL_MAX_ROWS or wrap_with_limit)):
         query.limit = SQL_MAX_ROWS
         executed_sql = database.apply_limit_to_sql(executed_sql, query.limit)
 

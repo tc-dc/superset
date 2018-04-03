@@ -16,6 +16,7 @@ import {
 import SplitPane from 'react-split-pane';
 
 import Button from '../../components/Button';
+import LimitControl from './LimitControl';
 import TemplateParamsEditor from './TemplateParamsEditor';
 import SouthPane from './SouthPane';
 import SaveQuery from './SaveQuery';
@@ -39,12 +40,14 @@ const propTypes = {
   dataPreviewQueries: PropTypes.array.isRequired,
   queryEditor: PropTypes.object.isRequired,
   hideLeftBar: PropTypes.bool,
+  defaultQueryLimit: PropTypes.number,
 };
 
 const defaultProps = {
   database: null,
   latestQuery: null,
   hideLeftBar: false,
+  defaultQueryLimit: 0,
 };
 
 class SqlEditor extends React.PureComponent {
@@ -125,6 +128,9 @@ class SqlEditor extends React.PureComponent {
   setQueryEditorSql(sql) {
     this.props.actions.queryEditorSetSql(this.props.queryEditor, sql);
   }
+  setQueryLimit(queryLimit) {
+    this.props.actions.queryEditorSetQueryLimit(this.props.queryEditor, queryLimit);
+  }
   runQuery() {
     this.startQuery(!this.props.database.allow_run_sync);
   }
@@ -138,6 +144,7 @@ class SqlEditor extends React.PureComponent {
       schema: qe.schema,
       tempTableName: ctas ? this.state.ctas : '',
       templateParams: qe.templateParams,
+      queryLimit: qe.queryLimit,
       runAsync,
       ctas,
     };
@@ -231,7 +238,16 @@ class SqlEditor extends React.PureComponent {
             <span className="m-r-5">
               <ShareQuery queryEditor={qe} />
             </span>
-            {ctasControls}
+            <span className="m-r-5">
+              {ctasControls}
+            </span>
+            <span className="inlineBlock m-r-5">
+              <LimitControl
+                value={(this.props.queryEditor.queryLimit !== undefined) ?
+                  this.props.queryEditor.queryLimit : this.props.defaultQueryLimit}
+                onChange={this.setQueryLimit.bind(this)}
+              />
+            </span>
             <span className="m-l-5">
               <Hotkeys
                 header="Hotkeys"
