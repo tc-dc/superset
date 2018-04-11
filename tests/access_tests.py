@@ -84,6 +84,52 @@ def create_access_request(session, ds_type, ds_name, role_name, user_name):
     return access_request
 
 
+class AccessTests(SupersetTestCase):
+
+    def setUp(self):
+        security_manager.add_role('test_slice_view')
+        db.session.commit()
+
+    def tearDown(self):
+        db.session.delete(security_manager.find_role('test_slice_view'))
+        db.session.commit()
+
+    def test_roles_with_access_by_database(self):
+        slc = self.get_slice('Girls', db.session)
+        role = security_manager.find_role('test_slice_view')
+        security_manager.merge_perm('database_access', slc.datasource.database.perm)
+        db_pvm = security_manager.find_permission_view_menu(
+            'database_access', slc.datasource.database.perm)
+        role.permissions.append(db_pvm)
+        db.session.commit()
+        access_roles = security_manager.roles_with_access_by_datasource(slc.datasource)
+        self.assertIn(role.name, access_roles)
+        json_endpoint = (
+            '/superset/explore_json/{}/{}/'
+            .format(slc.datasource_type, slc.datasource_id)
+        )
+        resp = self.client.post(
+            json_endpoint, {'form_data': json.dumps(slc.viz.form_data)})
+        self.assertEqual(resp.status_code, 404)
+
+    def test_roles_with_access_by_datasource(self):
+        slc = self.get_slice('Girls', db.session)
+        role = security_manager.find_role('test_slice_view')
+        security_manager.merge_perm('datasource_access', slc.perm)
+        ds_pvm = security_manager.find_permission_view_menu('datasource_access', slc.perm)
+        role.permissions.append(ds_pvm)
+        db.session.commit()
+        access_roles = security_manager.roles_with_access_by_datasource(slc.datasource)
+        self.assertIn(role.name, access_roles)
+        json_endpoint = (
+            '/superset/explore_json/{}/{}/'
+            .format(slc.datasource_type, slc.datasource_id)
+        )
+        resp = self.client.post(
+            json_endpoint, {'form_data': json.dumps(slc.viz.form_data)})
+        self.assertEqual(resp.status_code, 404)
+
+
 class RequestAccessTests(SupersetTestCase):
 
     requires_examples = False
