@@ -109,7 +109,7 @@ class AccessTests(SupersetTestCase):
             .format(slc.datasource_type, slc.datasource_id)
         )
         resp = self.client.post(
-            json_endpoint, {'form_data': json.dumps(slc.viz.form_data)})
+            json_endpoint, data={'form_data': json.dumps(slc.viz.form_data)})
         self.assertEqual(resp.status_code, 404)
 
     def test_roles_with_access_by_datasource(self):
@@ -126,7 +126,7 @@ class AccessTests(SupersetTestCase):
             .format(slc.datasource_type, slc.datasource_id)
         )
         resp = self.client.post(
-            json_endpoint, {'form_data': json.dumps(slc.viz.form_data)})
+            json_endpoint, data={'form_data': json.dumps(slc.viz.form_data)})
         self.assertEqual(resp.status_code, 404)
 
 
