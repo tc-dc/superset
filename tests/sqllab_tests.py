@@ -262,11 +262,11 @@ class SqlLabTests(SupersetTestCase):
         test_limit = 1
         data = self.run_sql(
             'SELECT * FROM slices',
-            client_id='test_sql_limit_client_1')
+            client_id='sql_limit_1')
         self.assertFalse(data['query']['limit_reached'])
         data = self.run_sql(
             'SELECT * FROM slices',
-            client_id='test_sql_limit_client_2',
+            client_id='sql_limit_2',
             query_limit=test_limit)
         self.assertTrue(data['query']['limit_reached'])
 
