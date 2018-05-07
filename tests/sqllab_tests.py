@@ -257,6 +257,19 @@ class SqlLabTests(SupersetTestCase):
         resp = self.get_json_resp('/superset/sqllab_viz/', data=data)
         self.assertIn('table_id', resp)
 
+    def test_sql_limit(self):
+        self.login('admin')
+        test_limit = 1
+        data = self.run_sql(
+            'SELECT * FROM slices',
+            client_id='test_sql_limit_client_1')
+        self.assertFalse(data['query']['limit_reached'])
+        data = self.run_sql(
+            'SELECT * FROM slices',
+            client_id='test_sql_limit_client_2',
+            query_limit=test_limit)
+        self.assertTrue(data['query']['limit_reached'])
+
 
 if __name__ == '__main__':
     unittest.main()
