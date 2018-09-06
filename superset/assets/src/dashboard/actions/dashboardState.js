@@ -38,6 +38,11 @@ export function changeFilter(chart, col, vals, merge = true, refresh = true) {
   return { type: CHANGE_FILTER, chart, col, vals, merge, refresh };
 }
 
+export const SET_HOVER = "SET_HOVER";
+export function setHover(chart, hoverPosition) {
+  return { type: SET_HOVER, chart, hoverPosition };
+}
+
 export const ADD_SLICE = 'ADD_SLICE';
 export function addSlice(slice) {
   return { type: ADD_SLICE, slice };

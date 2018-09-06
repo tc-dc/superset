@@ -2,6 +2,7 @@
 import {
   ADD_SLICE,
   CHANGE_FILTER,
+  SET_HOVER,
   ON_CHANGE,
   ON_SAVE,
   REMOVE_SLICE,
@@ -138,6 +139,10 @@ export default function dashboardStateReducer(state = {}, action) {
         });
       }
       return { ...state, filters, refresh };
+    },
+    [SET_HOVER]() {
+      const { chart, hoverPosition } = action;
+      return { ...state, chart, hoverPosition };
     },
     [SET_UNSAVED_CHANGES]() {
       const { hasUnsavedChanges } = action.payload;

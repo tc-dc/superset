@@ -27,6 +27,7 @@ const propTypes = {
   refreshChart: PropTypes.func.isRequired,
   toggleExpandSlice: PropTypes.func.isRequired,
   addFilter: PropTypes.func.isRequired,
+  setHover: PropTypes.func.isRequired,
   editMode: PropTypes.bool.isRequired,
   isExpanded: PropTypes.bool.isRequired,
   supersetCanExplore: PropTypes.bool.isRequired,
@@ -57,6 +58,7 @@ class Chart extends React.Component {
     this.resize = this.resize.bind(this);
     this.setDescriptionRef = this.setDescriptionRef.bind(this);
     this.setHeaderRef = this.setHeaderRef.bind(this);
+    this.setHover = this.setHover.bind(this);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -125,6 +127,10 @@ class Chart extends React.Component {
 
   addFilter(...args) {
     this.props.addFilter(this.props.chart, ...args);
+  }
+
+  setHover(...args) {
+    this.props.setHover(this.props.chart, ...args);
   }
 
   exploreChart() {
@@ -224,6 +230,7 @@ class Chart extends React.Component {
             timeout={timeout}
             vizType={slice.viz_type}
             addFilter={this.addFilter}
+            setHover={this.setHover}
             getFilters={this.getFilters}
             annotationData={chart.annotationData}
             chartAlert={chart.chartAlert}

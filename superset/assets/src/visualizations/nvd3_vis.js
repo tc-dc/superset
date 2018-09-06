@@ -843,6 +843,7 @@ export default function nvd3Vis(slice, payload) {
           .call(chart);
       }
     }
+
     return chart;
   };
 
@@ -851,5 +852,7 @@ export default function nvd3Vis(slice, payload) {
   // this will clear them before rendering the chart again.
   hideTooltips();
 
-  nv.addGraph(drawGraph);
+  var chartViz = drawGraph();
+  nv.addGraph(chartViz);
+  return chartViz;
 }

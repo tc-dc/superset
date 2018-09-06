@@ -158,7 +158,7 @@ class Dashboard extends React.PureComponent {
   }
 
   componentDidUpdate(prevProps) {
-    const { refresh, filters, hasUnsavedChanges } = this.props.dashboardState;
+    const { refresh, filters, hasUnsavedChanges, chart, hoverPosition } = this.props.dashboardState;
     if (refresh) {
       // refresh charts if a filter was removed, added, or changed
       let changedFilterKey = null;
@@ -184,6 +184,8 @@ class Dashboard extends React.PureComponent {
       }
     }
 
+    this.refreshHover(chart, hoverPosition);
+
     if (hasUnsavedChanges) {
       Dashboard.onBeforeUnload(true);
     } else {
@@ -194,6 +196,17 @@ class Dashboard extends React.PureComponent {
   // return charts in array
   getAllCharts() {
     return Object.values(this.props.charts);
+  }
+
+  refreshHover(srcChart, hoverPosition) {
+    if (srcChart === undefined) return;
+
+    this.getAllCharts().forEach(chart => {
+      if (chart.id !== srcChart.id) {
+        // THIS DOES NOT WORK
+        // chart.renderGuideline(hoverPosition.mouseX);
+      }
+    });
   }
 
   refreshExcept(filterKey) {

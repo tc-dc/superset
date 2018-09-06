@@ -44,11 +44,13 @@ const propTypes = {
   getFilters: PropTypes.func,
   onQuery: PropTypes.func,
   onDismissRefreshOverlay: PropTypes.func,
+  setHover: PropTypes.func,
 };
 
 const defaultProps = {
   addFilter: () => ({}),
   getFilters: () => ({}),
+  setHover: () => ({}),
 };
 
 class Chart extends React.PureComponent {
@@ -66,6 +68,8 @@ class Chart extends React.PureComponent {
     this.headerHeight = this.headerHeight.bind(this);
     this.height = this.height.bind(this);
     this.width = this.width.bind(this);
+    this.setHover = this.setHover.bind(this);
+    this.chartViz = null;
   }
 
   componentDidMount() {
@@ -107,6 +111,10 @@ class Chart extends React.PureComponent {
 
   setTooltip(tooltip) {
     this.setState({ tooltip });
+  }
+
+  setHover(hoverPosition) {
+    this.props.setHover(hoverPosition);
   }
 
   addFilter(col, vals, merge = true, refresh = true) {
@@ -185,7 +193,9 @@ class Chart extends React.PureComponent {
       if (formData.js_data) {
         queryResponse.data = sandboxedEval(formData.js_data)(queryResponse.data);
       }
-      visRenderer(this, queryResponse, setControlValue);
+      this.chartViz = visRenderer(this, queryResponse, setControlValue);
+      this.visualCorrelate(vizType, this.chartViz);
+
       if (chartStatus !== 'rendered') {
         this.props.actions.chartRenderingSucceeded(chartId);
       }
@@ -200,6 +210,25 @@ class Chart extends React.PureComponent {
       console.error(e); // eslint-disable-line no-console
       this.props.actions.chartRenderingFailed(e, chartId);
     }
+  }
+
+  visualCorrelate(vizType, chartViz) {
+    var chartObj = this;
+
+    if (vizType === 'line') {
+      var mouseMoveHandler = this.chartViz.interactiveLayer.dispatch.on('elementMousemove');
+
+      function customHandler(evt) {
+        mouseMoveHandler(evt);
+        chartObj.setHover(evt);
+      }
+
+      this.chartViz.interactiveLayer.dispatch.on('elementMousemove', customHandler);
+    }
+  }
+
+  renderGuideline(xPos) {
+    this.chartViz.interactiveLayer.renderGuideLine(xPos);
   }
 
   render() {

@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import {
   changeFilter as addFilter,
   toggleExpandSlice,
+  setHover,
 } from '../actions/dashboardState';
 import { refreshChart } from '../../chart/chartAction';
 import getFormDataWithExtraFilters from '../util/charts/getFormDataWithExtraFilters';
@@ -54,6 +55,7 @@ function mapDispatchToProps(dispatch) {
       updateComponents,
       toggleExpandSlice,
       addFilter,
+      setHover,
       refreshChart,
     },
     dispatch,
